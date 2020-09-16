@@ -201,19 +201,19 @@ def distance(M, T, letter1, letter2, dis):
 def condition1(T, directions):          # 1.at least 1 point;  2.be neighbourhood
     flag = False
 
-    print('condition1: ')
+    # print('condition1: ')
     for i in range(len(directions)):
         for j in range(3):
             if j == 0 and position(T, directions[i][j], 'a') and position(T, directions[i][j], 'b') and position(T, directions[i][j], 'd') and position(T, directions[i][j], 'e'):
-                print('template no: ', [i, j])
+                # print('template no: ', [i, j])
                 flag = True
                 break
             if j == 1 and position(T, directions[i][j], 'b') and position(T, directions[i][j], 'c') and position(T, directions[i][j], 'd') and position(T, directions[i][j], 'e') and position(T, directions[i][j], 'f'):
-                print('template no: ', [i, j])
+                # print('template no: ', [i, j])
                 flag = True
                 break
             if j == 2 and position(T, directions[i][j], 'c') and position(T, directions[i][j], 'd') and position(T, directions[i][j], 'e'):
-                print('template no: ', [i, j])
+                # print('template no: ', [i, j])
                 flag = True
                 break
     return flag
@@ -222,17 +222,17 @@ def condition1(T, directions):          # 1.at least 1 point;  2.be neighbourhoo
 def condition2(T, directions):          # 1.at least 1 point;  2.be neighbourhood
     flag = False
 
-    print('condition2: ')
+    # print('condition2: ')
     for i in range(len(directions)):
         for j in range(3):
             if j == 0 and distance(directions[i][j], T, 'a', 'b', 1.5) and distance(directions[i][j], T, 'b', 'd', 1.8) and distance(directions[i][j], T, 'd', 'e', 1.5):
-                print('template no: ', [i, j])
+                # print('template no: ', [i, j])
                 flag = True
             if j == 1 and distance(directions[i][j], T, 'b', 'c', 1.5) and distance(directions[i][j], T, 'c', 'd', 1.8) and distance(directions[i][j], T, 'd', 'e', 1.5) and distance(directions[i][j], T, 'e', 'f', 1.5):
-                print('template no: ', [i, j])
+                # print('template no: ', [i, j])
                 flag = True
             if j == 2 and distance(directions[i][j], T, 'c', 'd', 1.5) and distance(directions[i][j], T, 'd', 'e', 1.5):
-                print('template no: ', [i, j])
+                # print('template no: ', [i, j])
                 flag = True
     return flag
 
@@ -244,9 +244,108 @@ def condition(T, directions):
         return False
 
 
+def judgement(T, directions):
+    tmp = numpy.zeros_like(T)
+    xx, yy, zz = numpy.where(T == 1)
+    for i in range(len(xx)):
+        x, y, z = xx[i], yy[i], zz[i]
+        block = T[x - 1:x + 2, y - 1:y + 2, z - 1:z + 2]
+
+        if condition(block, directions):
+            tmp[x, y, z] = 1
+
+    return T - tmp
+
+
+def skeletonize_thinning(img):
+    """ A 3D 6-subiteration thinning algorithm for extracting medial lines
+    of Kalman Palagyi and Attila Kuba implementation
+    Parameters
+    ----------
+    img : ndarray, 3D
+    Returns
+    -------
+    skeleton : ndarray
+        The thinned image.
+    """
+
+    mat_len_x, mat_len_y, mat_len_z = img.shape
+    mat_tmp = numpy.zeros((mat_len_x + 2, mat_len_y + 2, mat_len_z + 2),
+                          dtype=int)                                        # patch 2 pixels
+    mat_tmp[1:-1, 1:-1, 1:-1] = img.astype(int)         # convert to int
+
+    directions = _build_mask()                    # templates in different directions
+
+    # ==========================================================================
+
+    # print('number of voxels: ', numpy.count_nonzero(mat_tmp))
+
+    iter = 0
+    while True:
+        print('iter: ', iter)
+
+        iter += 1
+        nb1 = numpy.count_nonzero(mat_tmp)              # count the number of the elements which aren't zero
+        mat_tmp = judgement(mat_tmp, directions)
+
+        nb2 = numpy.count_nonzero(mat_tmp)
+        if nb1 == nb2:
+            # print('remain voxels: ', nb1)
+            break
+
+    # ==========================================================================
+
+    return mat_tmp[1:-1, 1:-1, 1:-1]
+
+
+def get_difference(path1, path2):
+    itk_img1 = sitk.ReadImage(path1)
+    itk_img2 = sitk.ReadImage(path2)
+
+    itk_arr1 = sitk.GetArrayFromImage(itk_img1)
+    itk_arr2 = sitk.GetArrayFromImage(itk_img2)
+
+    arr1_list = list()
+    arr2_list = list()
+
+    for i1 in range(len(itk_arr1)):
+        for j1 in range(512):
+            for k1 in range(512):
+                if itk_arr1[i1][j1][k1]:
+                    arr1_list.append([i1, j1, k1])
+    print('before: ', len(arr1_list))
+
+    for i2 in range(len(itk_arr1)):
+        for j2 in range(512):
+            for k2 in range(512):
+                if itk_arr2[i2][j2][k2]:
+                    arr2_list.append([i2, j2, k2])
+    print('after: ', len(arr2_list))
+
+    delete_point = list()
+    for i in arr1_list:
+        flag = False
+        for j in arr2_list:
+            if i != j:
+                continue
+            else:
+                flag = True
+                break
+        if not flag:
+            delete_point.append(i)
+
+    print('delete ' + str(len(delete_point)) + ' points: ', delete_point)
+
+
 if __name__ == '__main__':
     directions = _build_mask()
-    print(T)
-    # print('condition1: ', condition1(T, directions))
-    # print('condition2: ', condition2(T, directions))
-    print('condition: ', condition(T, directions))
+
+    in_path = 'data_023_portal_vein_12thin.nrrd'
+    out_path = 'data_023_portal_vein_12thin_single.nrrd'
+    image = sitk.ReadImage(in_path)
+    image_arr = sitk.GetArrayFromImage(image)
+    img_arr = skeletonize_thinning(image_arr)
+    img_arr = img_arr
+    img = sitk.GetImageFromArray(img_arr)
+    sitk.WriteImage(img, out_path)
+    get_difference('data_023_portal_vein_12thin.nrrd', 'data_023_portal_vein_12thin_single.nrrd')
