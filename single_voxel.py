@@ -1,57 +1,58 @@
 import numpy
 import SimpleITK as sitk
 # ==============================================================================
-
-
-T = numpy.array([[[1, 0, 0],
-                  [0, 0, 0],
-                  [0, 0, 0]],
-
-                 [[0, 1, 1],
-                  [0, 1, 0],
-                  [0, 0, 0]],
-
-                 [[0, 0, 0],
-                  [0, 0, 1],
-                  [0, 0, 0]]])
-
-T_distanceError = numpy.array([[[1, 0, 0],
-                  [1, 1, 1],
-                  [1, 1, 1]],
-
-                 [[0, 0, 1],
-                  [1, 1, 1],
-                  [0, 0, 1]],
-
-                 [[1, 0, 0],
-                  [0, 0, 1],
-                  [1, 0, 0]]])
-
-
-T_positionError1 = numpy.array([[[1, 0, 1],
-                  [1, 0, 1],
-                  [1, 0, 1]],
-
-                 [[1, 0, 1],
-                  [1, 0, 1],
-                  [1, 0, 1]],
-
-                 [[1, 0, 1],
-                  [1, 0, 1],
-                  [1, 0, 1]]])
-
-
-T_positionError2 = numpy.array([[[0, 0, 0],
-                  [0, 0, 0],
-                  [0, 0, 0]],
-
-                 [[0, 0, 0],
-                  [0, 0, 0],
-                  [0, 0, 0]],
-
-                 [[0, 0, 0],
-                  [0, 0, 0],
-                  [0, 0, 0]]])
+#
+#
+# T = numpy.array([[[1, 0, 0],
+#                   [0, 0, 0],
+#                   [0, 0, 0]],
+#
+#                  [[0, 1, 1],
+#                   [0, 1, 0],
+#                   [0, 0, 0]],
+#
+#                  [[0, 0, 0],
+#                   [0, 0, 1],
+#                   [0, 0, 0]]])
+#
+# T_distanceError = numpy.array([[[1, 0, 0],
+#                   [1, 1, 1],
+#                   [1, 1, 1]],
+#
+#                  [[0, 0, 1],
+#                   [1, 1, 1],
+#                   [0, 0, 1]],
+#
+#                  [[1, 0, 0],
+#                   [0, 0, 1],
+#                   [1, 0, 0]]])
+#
+#
+# T_positionError1 = numpy.array([[[1, 0, 1],
+#                   [1, 0, 1],
+#                   [1, 0, 1]],
+#
+#                  [[1, 0, 1],
+#                   [1, 0, 1],
+#                   [1, 0, 1]],
+#
+#                  [[1, 0, 1],
+#                   [1, 0, 1],
+#                   [1, 0, 1]]])
+#
+#
+# T_positionError2 = numpy.array([[[0, 0, 0],
+#                   [0, 0, 0],
+#                   [0, 0, 0]],
+#
+#                  [[0, 0, 0],
+#                   [0, 0, 0],
+#                   [0, 0, 0]],
+#
+#                  [[0, 0, 0],
+#                   [0, 0, 0],
+#                   [0, 0, 0]]])
+#
 
 
 def Edis_3D(x1, y1, z1, x2, y2, z2):
@@ -340,12 +341,12 @@ def get_difference(path1, path2):
 if __name__ == '__main__':
     directions = _build_mask()
 
-    in_path = 'data_023_portal_vein_12thin.nrrd'
-    out_path = 'data_023_portal_vein_12thin_single.nrrd'
+    in_path = 'data_023_hepatic_vein_12thin.nrrd'
+    out_path = 'data_023_hepatic_vein_12thin_single.nrrd'
     image = sitk.ReadImage(in_path)
     image_arr = sitk.GetArrayFromImage(image)
     img_arr = skeletonize_thinning(image_arr)
     img_arr = img_arr
     img = sitk.GetImageFromArray(img_arr)
     sitk.WriteImage(img, out_path)
-    get_difference('data_023_portal_vein_12thin.nrrd', 'data_023_portal_vein_12thin_single.nrrd')
+    get_difference('data_023_hepatic_vein_12thin.nrrd', 'data_023_hepatic_vein_12thin_single.nrrd')
